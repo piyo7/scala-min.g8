@@ -1,3 +1,3 @@
 name := "temp"
 version := "0.0.0"
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.3"
