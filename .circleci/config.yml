@@ -1,0 +1,23 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    working_directory: ~/repo
+    environment:
+      JVM_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v2-{{ checksum "src/main/g8/build.sbt" }}-{{ checksum "src/main/g8/project/build.properties" }}
+          - v2-{{ checksum "src/main/g8/build.sbt" }}-
+          - v2-
+      - run:
+          command: sbt test:compile
+          working_directory: src/main/g8
+      - save_cache:
+          paths:
+            - ~/.ivy2
+            - ~/.sbt
+          key: v2-{{ checksum "src/main/g8/build.sbt" }}-{{ checksum "src/main/g8/project/build.properties" }}
