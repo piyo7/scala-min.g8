@@ -14,7 +14,10 @@ jobs:
           - v2-{{ checksum "src/main/g8/build.sbt" }}-
           - v2-
       - run:
-          command: sbt compile
+          command: |
+            sbt assembly
+            docker build -t temp .
+            docker run temp
           working_directory: src/main/g8
       - save_cache:
           paths:
