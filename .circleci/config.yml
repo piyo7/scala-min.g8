@@ -3,26 +3,35 @@ jobs:
   build:
     docker:
       - image: circleci/openjdk:11-jdk
-    working_directory: ~/repo
+    working_directory: ~/repo/src/main/g8
     environment:
       JVM_OPTS: -Xmx3200m
     steps:
-      - checkout
+      - checkout:
+          path: ~/repo
       - restore_cache:
           keys:
-          - v2-{{ checksum "src/main/g8/build.sbt" }}-{{ checksum "src/main/g8/project/build.properties" }}
-          - v2-{{ checksum "src/main/g8/build.sbt" }}-
+          - v2-{{ checksum "build.sbt" }}-{{ checksum "project/build.properties" }}
+          - v2-{{ checksum "build.sbt" }}-
           - v2-
       - setup_remote_docker:
           docker_layer_caching: true
+      - run: sbt update
+      - save_cache:
+          paths:
+            - ~/.ivy2
+            - ~/.sbt
+          key: v2-{{ checksum "build.sbt" }}-{{ checksum "project/build.properties" }}
       - run:
           command: |
             sbt assembly
             docker build -t temp .
             docker run temp
-          working_directory: src/main/g8
-      - save_cache:
-          paths:
-            - ~/.ivy2
-            - ~/.sbt
-          key: v2-{{ checksum "src/main/g8/build.sbt" }}-{{ checksum "src/main/g8/project/build.properties" }}
+      - run:
+          command: sbt scalafmtCheck scalafmtSbtCheck test:scalafmtCheck test
+      - store_test_results:
+          path: target/test-reports
+      - run:
+          command: sbt dependencyUpdates
+      - run:
+          command: sbt dependencyTree
